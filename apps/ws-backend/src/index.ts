@@ -74,13 +74,20 @@ wss.on("connection", (ws, request) => {
       const roomId = parsedData.roomId;
       const message = parsedData.message;
 
-      await prismaClient.chat.create({
-        data: {
-          roomId,
-          message,
-          userId,
-        },
-      });
+      console.log("type of roomid ", typeof roomId);
+      try {
+        await prismaClient.chat.create({
+          data: {
+            roomId: Number(roomId),
+            message,
+            userId,
+          },
+        });
+      } catch (e) {
+        console.log("not able to add chat in db");
+        console.log("error : ", e);
+      }
+
       users.forEach((user) => {
         if (user.rooms.includes(roomId)) {
           user.ws.send(
