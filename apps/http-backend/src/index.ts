@@ -7,11 +7,12 @@ import {
   SigninSchema,
   CreateRoomSchema,
 } from "@repo/common/types";
-import { prismaClient } from "@repo/db/client";
+
 import { Request, Response } from "express";
 import { ExtendedReq, middleware } from "./middleware";
 import cors from "cors";
 import dotenv from "dotenv";
+import { prismaClient } from "@repo/db/client";
 
 dotenv.config();
 const app = express();
@@ -119,7 +120,9 @@ app.post("/room", middleware, async (req, res) => {
 
 //TODO : not authenticated(anyone can see message by roomid)
 app.get("/chats/:roomId", async (req, res) => {
+  console.log("backend chats/roomid request", req.params.roomId);
   const roomId = Number(req.params.roomId);
+
   const messages = await prismaClient.chat.findMany({
     where: { roomId: roomId },
     orderBy: {
