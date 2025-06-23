@@ -2,8 +2,9 @@ import { initDraw } from "@/draw";
 import { useEffect, useRef, useState } from "react";
 import { IconButton } from "./IconButton";
 import { Circle, Pencil, RectangleHorizontalIcon } from "lucide-react";
+import { Game } from "@/draw/Game";
 
-type Shape = "circle" | "rect" | "pencil";
+export type Tool = "circle" | "rect" | "pencil";
 
 export default function Canvas({
   roomId,
@@ -13,11 +14,21 @@ export default function Canvas({
   socket: WebSocket;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedTool, setSelectedTool] = useState<Shape>("circle");
+  const [game, setGame] = useState<Game>()
+  const [selectedTool, setSelectedTool] = useState<Tool>("circle");
+
+  useEffect(() => {
+  game?.setTool(selectedTool)
+  }, [selectedTool]);
 
   useEffect(() => {
     if (canvasRef.current) {
-      initDraw(canvasRef.current, roomId, socket);
+      const g = new Game(canvasRef.current, roomId, socket)
+      setGame(g)
+
+      return () => {
+        g.destroy();
+      }
     }
   }, [canvasRef]);
 
@@ -42,8 +53,8 @@ function Topbar({
   selectedTool,
   setSelectedTool,
 }: {
-  selectedTool: Shape;
-  setSelectedTool: (s: Shape) => void;
+  selectedTool: Tool;
+  setSelectedTool: (s: Tool) => void;
 }) {
   return (
     <div className="flex absolute top-10 left-10 position-fixed gap-4">

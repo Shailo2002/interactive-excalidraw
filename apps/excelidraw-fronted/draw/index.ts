@@ -1,5 +1,6 @@
 import { HTTP_BACKEND } from "@/config";
 import axios from "axios";
+import { getExistingShapes } from "./http";
 
 type Shape =
   | {
@@ -14,6 +15,13 @@ type Shape =
       CenterX: number;
       CenterY: number;
       radius: number;
+    }
+  | {
+      type: "pencil";
+      startX: number;
+      startY: number;
+      endX: number;
+      endY: number;
     };
 
 export async function initDraw(
@@ -38,9 +46,6 @@ export async function initDraw(
     }
   };
 
-  //   ctx.fillStyle = "rgba(0,0,0)";
-  //   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   clearCanvas(existingShapes, canvas, ctx);
   let clicked = false;
   let startX = 0;
@@ -55,13 +60,49 @@ export async function initDraw(
     clicked = false;
     const width = e.clientX - startX;
     const height = e.clientY - startY;
-    const shape: Shape = {
-      type: "rect",
-      x: startX,
-      y: startY,
-      height,
-      width,
-    };
+    // @ts-ignore
+    const selectedTool = window.selectedTool;
+    let shape: Shape | null = null;
+    if (selectedTool === "rect") {
+      shape = {
+        type: "rect",
+        x: startX,
+        y: startY,
+        height,
+        width,
+      };
+    } else if (selectedTool === "circle") {
+      const radius = Math.max(Math.abs(width), Math.abs(height)) / 2;
+
+      let CenterX = startX + radius;
+      let CenterY = startY + radius;
+
+      if (width < 0 && height < 0) {
+        CenterX = startX - radius;
+        CenterY = startY - radius;
+      } else if (width < 0) {
+        CenterX = startX - radius;
+        CenterY = startY + radius;
+      } else if (height < 0) {
+        CenterX = startX + radius;
+        CenterY = startY - radius;
+      } else {
+        CenterX = startX + radius;
+        CenterY = startY + radius;
+      }
+
+      shape = {
+        type: "circle",
+        CenterX: CenterX,
+        CenterY: CenterY,
+        radius: Math.abs(radius),
+      };
+    }
+
+    if (!shape) {
+      return;
+    }
+
     existingShapes.push(shape);
 
     socket.send(
@@ -80,7 +121,35 @@ export async function initDraw(
       const height = e.clientY - startY;
       clearCanvas(existingShapes, canvas, ctx);
       ctx.strokeStyle = "rgba(255,255,255)";
-      ctx.strokeRect(startX, startY, width, height);
+
+      // @ts-ignore
+      const selectedTool = window.selectedTool;
+      if (selectedTool == "rect") {
+        ctx.strokeRect(startX, startY, width, height);
+      } else if (selectedTool == "circle") {
+        const radius = Math.max(Math.abs(width), Math.abs(height)) / 2;
+        let CenterX = startX + radius;
+        let CenterY = startY + radius;
+
+        if (width < 0 && height < 0) {
+          CenterX = startX - radius;
+          CenterY = startY - radius;
+        } else if (width < 0) {
+          CenterX = startX - radius;
+          CenterY = startY + radius;
+        } else if (height < 0) {
+          CenterX = startX + radius;
+          CenterY = startY - radius;
+        } else {
+          CenterX = startX + radius;
+          CenterY = startY + radius;
+        }
+
+        ctx.beginPath();
+        ctx.arc(CenterX, CenterY, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.closePath();
+      }
     }
   });
 }
@@ -90,30 +159,28 @@ function clearCanvas(
   canvas: HTMLCanvasElement,
   ctx: CanvasRenderingContext2D
 ) {
-  console.log("existingshapes ", existingShapes);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "rgba(0,0,0)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   existingShapes.map((shape) => {
-    
     if (shape.type === "rect") {
       console.log("inside map");
 
       ctx.strokeStyle = "rgba(255,255,255)";
       ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
+    } else if (shape.type == "circle") {
+      ctx.beginPath();
+      ctx.arc(
+        shape.CenterX,
+        shape.CenterY,
+        Math.abs(shape.radius),
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
+      ctx.closePath();
     }
   });
 }
 
-async function getExistingShapes(roomId: string) {
-  const res = await axios.get(`${HTTP_BACKEND}/chats/${roomId}`);
-  const messages = res.data.messages;
-
-  const shapes = messages.map((x: { message: string }) => {
-    const messageData = JSON.parse(x.message);
-    return messageData.shape;
-  });
-
-  return shapes;
-}
