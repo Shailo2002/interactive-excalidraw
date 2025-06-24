@@ -71,7 +71,7 @@ wss.on("connection", (ws, request) => {
     if (parsedData.type === "chat") {
       const roomId = parsedData.roomId;
       const message = parsedData.message;
-
+      console.log("message in websocket : ", message);
       try {
         await prismaClient.chat.create({
           data: {
@@ -97,5 +97,47 @@ wss.on("connection", (ws, request) => {
         }
       });
     }
+
+   if (parsedData.type === "erase") {
+     const shapeId = parsedData.shapeId;
+     const roomId = parsedData.roomId;
+
+     try {
+       const allMessages = await prismaClient.chat.findMany({
+         where: { roomId },
+       });
+
+       const msgToDelete = allMessages.find((msg) => {
+         try {
+           const parsed = JSON.parse(msg.message);
+           return parsed.shape?.id === shapeId;
+         } catch {
+           return false;
+         }
+       });
+
+       if (msgToDelete) {
+         await prismaClient.chat.delete({
+           where: { id: msgToDelete.id },
+         });
+       }
+     } catch (e) {
+       console.log("DB deletion error:", e);
+     }
+
+     users.forEach((user) => {
+       if (user.rooms.includes(roomId)) {
+         user.ws.send(
+           JSON.stringify({
+             type: "erase",
+             shapeId: shapeId,
+             roomId,
+           })
+         );
+       }
+     });
+   }
+
+
   });
 });
