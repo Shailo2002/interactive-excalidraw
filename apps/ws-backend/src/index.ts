@@ -15,9 +15,7 @@ const wss = new WebSocketServer({ port: 8080 });
 
 function checkUser(token: string): string | null {
   try {
-    console.log("jsontoken verification at ws-backend", JWT_SECRET);
     const decoded = jwt.verify(token, JWT_SECRET);
-    console.log("decoded userId ", decoded);
 
     if (typeof decoded === "string") {
       return null;
@@ -41,9 +39,7 @@ wss.on("connection", (ws, request) => {
 
   const queryParams = new URLSearchParams(url.split("?")[1]);
   const token = queryParams.get("token") || "";
-  console.log("token :", token);
   const userId = checkUser(token);
-  console.log("websocket connected", userId);
   if (userId === null) {
     ws.close();
     return null;
@@ -76,11 +72,10 @@ wss.on("connection", (ws, request) => {
       const roomId = parsedData.roomId;
       const message = parsedData.message;
 
-      console.log("type of roomid ", typeof roomId);
       try {
         await prismaClient.chat.create({
           data: {
-            roomId: Number(roomId),
+            roomId: roomId,
             message,
             userId,
           },

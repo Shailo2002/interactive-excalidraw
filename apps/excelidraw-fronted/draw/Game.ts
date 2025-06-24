@@ -20,6 +20,12 @@ type Shape =
       startX: number;
       startY: number;
       endX: number;
+    }
+  | {
+      type: "line";
+      startX: number;
+      startY: number;
+      endX: number;
       endY: number;
     };
 
@@ -55,7 +61,7 @@ export class Game {
     this.canvas.removeEventListener("mousemove", this.mouseMoveHandler);
   }
 
-  setTool(tool: "circle" | "pencil" | "rect") {
+  setTool(tool: "circle" | "pencil" | "rect" | "line") {
     this.selectedTool = tool;
   }
 
@@ -87,7 +93,6 @@ export class Game {
         this.ctx.strokeStyle = "rgba(255, 255, 255)";
         this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
       } else if (shape.type === "circle") {
-        console.log(shape);
         this.ctx.beginPath();
         this.ctx.arc(
           shape.centerX,
@@ -98,11 +103,18 @@ export class Game {
         );
         this.ctx.stroke();
         this.ctx.closePath();
+      } else if (shape.type === "line") {
+        this.ctx.beginPath();
+        this.ctx.moveTo(shape.startX, shape.startY);
+        this.ctx.lineTo(shape.endX, shape.endY);
+        this.ctx.stroke();
+        this.ctx.closePath();
       }
     });
   }
 
   mouseDownHandler = (e) => {
+    console.log("selected tool ", this.selectedTool)
     this.clicked = true;
     this.startX = e.clientX;
     this.startY = e.clientY;
@@ -111,7 +123,8 @@ export class Game {
     this.clicked = false;
     const width = e.clientX - this.startX;
     const height = e.clientY - this.startY;
-
+    const endX =  e.clientX;
+    const endY = e.clientY;
     const selectedTool = this.selectedTool;
     let shape: Shape | null = null;
     if (selectedTool === "rect") {
@@ -130,11 +143,22 @@ export class Game {
         centerX: this.startX + radius,
         centerY: this.startY + radius,
       };
+    } else if (selectedTool === "line") {
+      shape = {
+        type: "line",
+        startX: this.startX,
+        startY: this.startY,
+        endX,
+        endY
+      };
     }
 
     if (!shape) {
       return;
     }
+
+    console.log("shape :", shape);
+    console.log("socket :", this.socket);
 
     this.existingShapes.push(shape);
 
@@ -152,6 +176,8 @@ export class Game {
     if (this.clicked) {
       const width = e.clientX - this.startX;
       const height = e.clientY - this.startY;
+      const endX = e.clientX;
+      const endY = e.clientY;
       this.clearCanvas();
       this.ctx.strokeStyle = "rgba(255, 255, 255)";
       const selectedTool = this.selectedTool;
@@ -166,6 +192,11 @@ export class Game {
         this.ctx.arc(centerX, centerY, Math.abs(radius), 0, Math.PI * 2);
         this.ctx.stroke();
         this.ctx.closePath();
+      }
+      if (selectedTool === "line") {
+        this.ctx.moveTo(this.startX, this.startY);
+        this.ctx.lineTo(endX, endY);
+        this.ctx.stroke();
       }
     }
   };

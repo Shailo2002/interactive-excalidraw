@@ -1,45 +1,43 @@
 "use client";
 
+import { HTTP_BACKEND } from "@/config";
 import axios from "axios";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BACKEND_URL } from "../app/config";
 
 export function Authentication({ auth_type }: { auth_type: string }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const router = useRouter();
+
   const handleSubmit = async () => {
     if (auth_type === "signup") {
-      console.log("Signup with:", name, email, password);
-      const signup_res = await axios.post(`${BACKEND_URL}/signup`, {
+      const signup_res = await axios.post(`${HTTP_BACKEND}/signup`, {
         name,
         email,
         password,
       });
-      console.log("singup completed");
       router.push("/signin");
     } else {
-      console.log("Signin with:", { email, password });
-      const signin_res = await axios.post(`${BACKEND_URL}/signin`, {
+      const signin_res = await axios.post(`${HTTP_BACKEND}/signin`, {
         email,
         password,
       });
       localStorage.setItem("token", signin_res.data.token);
-      console.log("response from signin endpoint :", signin_res.data.token);
-      router.push("/");
+      router.push("/dashboard");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex items-center justify-center min-h-screen bg-gray-200">
       <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-sm">
-        <h2 className="text-2xl font-bold mb-6 text-center capitalize">
+        <h2 className="text-2xl font-bold mb-6 text-center capitalize text-slate-900">
           {auth_type}
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-4 text-black">
           <input
             type="email"
             placeholder="Email"
@@ -70,6 +68,27 @@ export function Authentication({ auth_type }: { auth_type: string }) {
             {auth_type === "signup" ? "Sign Up" : "Sign In"}
           </button>
         </div>
+
+        {/* auth page switching */}
+        {auth_type === "signup" ? (
+          <div className=" flex justify-center pt-4 text-sm font-light pl-2 text-black">
+            already have account{" "}
+            <Link href="/signin">
+              <span className="font-semibold pl-2 text-blue-600 cursor-pointer underline">
+                Signin
+              </span>
+            </Link>
+          </div>
+        ) : (
+          <div className="flex justify-center pt-4 text-sm font-light pl-2 text-black">
+            dont have account{" "}
+            <Link href="/signup">
+              <span className="font-semibold pl-2 text-blue-600 cursor-pointer underline">
+                Signup
+              </span>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

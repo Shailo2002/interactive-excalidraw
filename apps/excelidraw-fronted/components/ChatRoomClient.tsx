@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSocket } from "../hooks/useSocket";
+
 import { useRouter } from "next/navigation";
+import { useSocket } from "@/hooks/useSocket";
 
 export function ChatRoomClient({
   messages,

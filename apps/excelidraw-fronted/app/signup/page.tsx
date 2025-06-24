@@ -1,9 +1,6 @@
-import AuthPage from "@/components/AuthPage";
+import { Authentication } from "@/components/AuthComponent";
 
-export default function Signup() {
-  return (
-    <>
-      <AuthPage isSignin={false}></AuthPage>
-    </>
-  );
+
+export default function () {
+  return <Authentication auth_type={"signup"} />;
 }

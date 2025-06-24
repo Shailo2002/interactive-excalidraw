@@ -17,7 +17,11 @@ type Shape =
       radius: number;
     }
   | {
-      type: "pencil";
+    type: "pencil";
+    points: { x: number; y: number }[];
+  }
+|{
+      type: "line";
       startX: number;
       startY: number;
       endX: number;

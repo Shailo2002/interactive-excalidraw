@@ -1,9 +1,10 @@
+import { ChatRoom } from "@/components/ChatRoom";
+import { HTTP_BACKEND } from "@/config";
 import axios from "axios";
-import { BACKEND_URL } from "../../config";
-import { ChatRoom } from "../../../components/ChatRoom";
+
 
 async function getRoomId(slug: string) {
-  const response = await axios.get(`${BACKEND_URL}/room/${slug}`);
+  const response = await axios.get(`${HTTP_BACKEND}/room/${slug}`);
   return response.data.room.id;
 }
 

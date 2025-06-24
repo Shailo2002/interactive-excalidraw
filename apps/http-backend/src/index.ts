@@ -96,6 +96,7 @@ app.post("/signin", async (req, res) => {
 app.post("/room", middleware, async (req, res) => {
   const parsedData = CreateRoomSchema.safeParse(req.body);
   if (!parsedData.success) {
+    console.log("Invalid body format:", req.body);
     res.status(400).json({ message: "Invalid input" });
     return;
   }
@@ -105,7 +106,7 @@ app.post("/room", middleware, async (req, res) => {
     const userId = (req as ExtendedReq).userId || "";
     const room = await prismaClient.room.create({
       data: {
-        slug: parsedData.data.name,
+        slug: parsedData.data.slug,
         adminId: userId,
       },
     });
@@ -121,8 +122,7 @@ app.post("/room", middleware, async (req, res) => {
 //TODO : not authenticated(anyone can see message by roomid)
 app.get("/chats/:roomId", async (req, res) => {
   console.log("backend chats/roomid request", req.params.roomId);
-  const roomId = Number(req.params.roomId);
-
+  const roomId = req.params.roomId;
   const messages = await prismaClient.chat.findMany({
     where: { roomId: roomId },
     orderBy: {
@@ -135,15 +135,37 @@ app.get("/chats/:roomId", async (req, res) => {
 });
 
 app.get("/room/:slug", async (req, res) => {
-  console.log("room/slug req call in backend");
   const slug = req.params.slug;
   console.log("slug detail ", slug);
   const room = await prismaClient.room.findFirst({
     where: { slug },
+    select: {
+      id: true,
+    },
   });
-  console.log(`room detail ${room?.id}`);
+  if (room === null) {
+    res.status(404).json({ message: "Room not found" });
+    return;
+  }
   res.json({ room });
 });
+
+app.get("/roomlist",middleware,  async (req,res) => {
+ try {
+   
+   const userId = (req as ExtendedReq).userId || "";
+   console.log("userId :", userId)
+    const rooms = await prismaClient.room.findMany({
+      where: { adminId: userId },
+      select: { slug: true, id:true }, 
+    });
+   console.log("roomlist :", rooms)
+
+   res.json(rooms);
+ } catch (error) {
+   res.status(411).json({ message: "no room exist" });
+ }
+})
 
 app.listen(port, () => {
   console.log(`"http server running on ${port}"`);

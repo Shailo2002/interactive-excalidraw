@@ -12,6 +12,10 @@ export function middleware(
   next: NextFunction
 ) {
   const token = req.headers["authorization"] ?? "";
+  if (!token) {
+    res.status(401).json({ message: "token not found, login first" });
+    return;
+  }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
