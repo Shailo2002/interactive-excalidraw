@@ -12,6 +12,7 @@ export type Shape =
       y: number;
       width: number;
       height: number;
+      color?: string;
     }
   | {
       id: string;
@@ -19,6 +20,7 @@ export type Shape =
       centerX: number;
       centerY: number;
       radius: number;
+      color?: string;
     }
   | {
       id: string;
@@ -27,14 +29,27 @@ export type Shape =
       startY: number;
       endX: number;
       endY: number;
+      color?: string;
     }
   | {
       id: string;
       type: "pencil";
+      color?: string;
       points: { x: number; y: number }[];
+    }
+  | {
+      id: string;
+      type: "text";
+      x: number;
+      y: number;
+      text: string;
+      color?: string;
     };
 
 export class Game {
+  static setColor(value: string): void {
+    throw new Error("Method not implemented.");
+  }
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private existingShapes: Shape[] = [];
@@ -43,6 +58,7 @@ export class Game {
   private startX = 0;
   private startY = 0;
   private selectedTool: Tool = "circle";
+  private selectedColor: string = "white";
   private pencilPoints: { x: number; y: number }[] = [];
 
   socket: WebSocket;
@@ -65,6 +81,11 @@ export class Game {
 
   setTool(tool: Tool) {
     this.selectedTool = tool;
+  }
+
+  setColor(color: string){
+    console.log("color in GAme:", color)
+    this.selectedColor = color
   }
 
   async init() {
@@ -94,14 +115,14 @@ export class Game {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.fillStyle = "black";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
     this.existingShapes.forEach((shape) => {
-      this.ctx.strokeStyle = "white";
+      this.ctx.strokeStyle = shape.color || "white";
       this.ctx.lineWidth = 2;
       if (shape.type === "rect") {
         this.ctx.strokeRect(shape.x, shape.y, shape.width, shape.height);
       } else if (shape.type === "circle") {
         this.ctx.beginPath();
+          this.ctx.strokeStyle = shape.color || "white";
         this.ctx.arc(
           shape.centerX,
           shape.centerY,
@@ -113,12 +134,14 @@ export class Game {
         this.ctx.closePath();
       } else if (shape.type === "line") {
         this.ctx.beginPath();
+          this.ctx.strokeStyle = shape.color || "white";
         this.ctx.moveTo(shape.startX, shape.startY);
         this.ctx.lineTo(shape.endX, shape.endY);
         this.ctx.stroke();
         this.ctx.closePath();
       } else if (shape.type === "pencil") {
         this.ctx.beginPath();
+          this.ctx.strokeStyle = shape.color || "white";
         const [first, ...rest] = shape.points;
         this.ctx.moveTo(first.x, first.y);
         for (const point of rest) {
@@ -126,16 +149,19 @@ export class Game {
         }
         this.ctx.stroke();
         this.ctx.closePath();
+      } else if (shape.type === "text") {
+        this.ctx.fillStyle = shape.color || "white";
+        this.ctx.font = "20px sans-serif";
+        this.ctx.fillText(shape.text, shape.x, shape.y);
       }
-
     });
   }
 
   mouseDownHandler = (e: MouseEvent) => {
-    if (this.selectedTool === "eraser") {
-      const clickX = e.clientX;
-      const clickY = e.clientY;
+    const clickX = e.clientX;
+    const clickY = e.clientY;
 
+    if (this.selectedTool === "eraser") {
       const shapeIndex = this.existingShapes.findIndex((shape) => {
         if (shape.type === "rect") {
           return (
@@ -157,7 +183,6 @@ export class Game {
           );
           return dist < 5;
         } else if (shape.type === "pencil") {
-          // Check if click is near any segment of the pencil path
           const points = shape.points;
           for (let i = 0; i < points.length - 1; i++) {
             const dist = this.pointToLineDistance(
@@ -168,11 +193,21 @@ export class Game {
             if (dist < 5) return true;
           }
           return false;
+        } else if (shape.type === "text") {
+          // Check click within text bounding box
+          this.ctx.font = "20px sans-serif"; // match drawing style
+          const textWidth = this.ctx.measureText(shape.text).width;
+          const textHeight = 20; // approx font height
+          return (
+            clickX >= shape.x &&
+            clickX <= shape.x + textWidth &&
+            clickY >= shape.y - textHeight &&
+            clickY <= shape.y
+          );
         }
 
         return false;
       });
-
 
       if (shapeIndex !== -1) {
         const shape = this.existingShapes[shapeIndex];
@@ -191,12 +226,39 @@ export class Game {
       return;
     }
 
+    if (this.selectedTool === "text") {
+      const text = prompt("Enter text:");
+      if (text) {
+        const shape: Shape = {
+          id: uuidv4(),
+          type: "text",
+          x: clickX,
+          y: clickY,
+          text,
+          color: this.selectedColor,
+        };
+        this.existingShapes.push(shape);
+        this.socket.send(
+          JSON.stringify({
+            type: "chat",
+            message: JSON.stringify({ shape }),
+            roomId: this.roomId,
+          })
+        );
+        this.clearCanvas();
+      }
+      return;
+    }
+
+    // for drawing tools
     this.clicked = true;
-    this.startX = e.clientX;
-    this.startY = e.clientY;
+    this.startX = clickX;
+    this.startY = clickY;
   };
 
   mouseUpHandler = (e: MouseEvent) => {
+    this.ctx.strokeStyle = this.selectedColor;
+
     if (!this.clicked || this.selectedTool === "eraser") return;
 
     let shape: Shape | null = null;
@@ -206,6 +268,7 @@ export class Game {
     const id = uuidv4();
 
     if (this.selectedTool === "rect") {
+      console.log("color :", this.selectedColor);
       shape = {
         id,
         type: "rect",
@@ -213,6 +276,7 @@ export class Game {
         y: this.startY,
         width: endX - this.startX,
         height: endY - this.startY,
+        color: this.selectedColor,
       };
     } else if (this.selectedTool === "circle") {
       const radius = Math.max(endX - this.startX, endY - this.startY) / 2;
@@ -222,6 +286,7 @@ export class Game {
         centerX: this.startX + radius,
         centerY: this.startY + radius,
         radius,
+        color: this.selectedColor,
       };
     } else if (this.selectedTool === "line") {
       shape = {
@@ -231,11 +296,13 @@ export class Game {
         startY: this.startY,
         endX,
         endY,
+        color: this.selectedColor,
       };
     } else if (this.selectedTool === "pencil" && this.pencilPoints.length > 1) {
       const shape: Shape = {
         id: uuidv4(),
         type: "pencil",
+        color: this.selectedColor,
         points: [...this.pencilPoints],
       };
 
@@ -253,7 +320,6 @@ export class Game {
       this.pencilPoints = [];
       return;
     }
-
 
     if (!shape) return;
 
@@ -316,7 +382,6 @@ export class Game {
       this.ctx.stroke();
       this.ctx.closePath();
     }
-
   };
 
   pointToLineDistance(

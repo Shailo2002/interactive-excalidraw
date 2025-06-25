@@ -12,7 +12,7 @@ import {
 import { Game } from "@/draw/Game";
 import { ShareModal } from "./ShareModal";
 
-export type Tool = "circle" | "rect" | "pencil" | "line" | "eraser";
+export type Tool = "circle" | "rect" | "pencil" | "line" | "eraser" | "text";
 
 export default function Canvas({
   roomId,
@@ -25,10 +25,17 @@ export default function Canvas({
   const [game, setGame] = useState<Game>();
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedTool, setSelectedTool] = useState<Tool>("circle");
+  const [selectedColor, setSelectedColor] = useState("");
 
   useEffect(() => {
     game?.setTool(selectedTool);
   }, [selectedTool]);
+
+  useEffect(() => {
+                    console.log("selected color :", selectedColor);
+
+    game?.setColor(selectedColor);
+  }, [selectedColor]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -52,6 +59,7 @@ export default function Canvas({
         selectedTool={selectedTool}
         setSelectedTool={setSelectedTool}
         setShowShareModal={setShowShareModal}
+        setSelectedColor={setSelectedColor}
       />
 
       {showShareModal && (
@@ -65,10 +73,12 @@ function Topbar({
   selectedTool,
   setSelectedTool,
   setShowShareModal,
+  setSelectedColor,
 }: {
   selectedTool: Tool;
   setSelectedTool: (s: Tool) => void;
   setShowShareModal: (show: boolean) => void;
+  setSelectedColor: (s:string) => void;
 }) {
   return (
     <>
@@ -98,6 +108,19 @@ function Topbar({
           activated={selectedTool === "eraser"}
           icon={<Eraser />}
           onClick={() => setSelectedTool("eraser")}
+        />
+        <IconButton
+          activated={selectedTool === "text"}
+          icon={<span className="font-bold text-lg">T</span>}
+          onClick={() => setSelectedTool("text")}
+        />
+        <input
+          type="color"
+          className="w-10 h-10 p-0 border-none bg-transparent"
+          onChange={(e) => {
+            setSelectedColor(e.target.value);
+          }}
+          title="Choose color"
         />
       </div>
 

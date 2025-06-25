@@ -12,7 +12,7 @@ export function ShareModal({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-lg text-center">
-        <h2 className="text-xl font-semibold mb-4 text-purple-700">
+        <h2 className="text-xl font-semibold mb-4 text-blue-600">
           Live collaboration
         </h2>
         <p className="text-sm text-gray-600 mb-6">
@@ -27,7 +27,7 @@ export function ShareModal({
               toast.success("link copied");
               navigator.clipboard.writeText(link);
             }}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg "
           >
             Copy link
           </button>
