@@ -10,9 +10,9 @@ import {
   Share2,
 } from "lucide-react";
 import { Game } from "@/draw/Game";
+import { ShareModal } from "./ShareModal";
 
 export type Tool = "circle" | "rect" | "pencil" | "line" | "eraser";
-
 
 export default function Canvas({
   roomId,
@@ -23,6 +23,7 @@ export default function Canvas({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [game, setGame] = useState<Game>();
+  const [showShareModal, setShowShareModal] = useState(false);
   const [selectedTool, setSelectedTool] = useState<Tool>("circle");
 
   useEffect(() => {
@@ -33,7 +34,6 @@ export default function Canvas({
     if (canvasRef.current) {
       const g = new Game(canvasRef.current, roomId, socket);
       setGame(g);
-
       return () => {
         g.destroy();
       };
@@ -41,18 +41,22 @@ export default function Canvas({
   }, [canvasRef]);
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        overflow: "hidden",
-      }}
-    >
+    <div style={{ height: "100vh", overflow: "hidden" }}>
       <canvas
         ref={canvasRef}
         width={window.innerWidth}
         height={window.innerHeight}
       ></canvas>
-      <Topbar selectedTool={selectedTool} setSelectedTool={setSelectedTool} />
+
+      <Topbar
+        selectedTool={selectedTool}
+        setSelectedTool={setSelectedTool}
+        setShowShareModal={setShowShareModal}
+      />
+
+      {showShareModal && (
+        <ShareModal roomId={roomId} onClose={() => setShowShareModal(false)} />
+      )}
     </div>
   );
 }
@@ -60,9 +64,11 @@ export default function Canvas({
 function Topbar({
   selectedTool,
   setSelectedTool,
+  setShowShareModal,
 }: {
   selectedTool: Tool;
   setSelectedTool: (s: Tool) => void;
+  setShowShareModal: (show: boolean) => void;
 }) {
   return (
     <>
@@ -98,20 +104,18 @@ function Topbar({
       {/* Home & Share: Top-Right */}
       <div className="fixed top-6 right-6 flex gap-4 items-center z-10 bg-white/80 p-2 rounded-lg shadow-md text-black">
         <button
-          onClick={() => {
-            // TODO: Add share logic
-            navigator.clipboard.writeText(window.location.href);
-          }}
-          className="flex items-center gap-1  bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition"
+          onClick={() => setShowShareModal(true)}
+          className="flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition"
         >
           <Share2 className="w-5 h-5" />
           Share
         </button>
+
         <button
           onClick={() => {
             window.location.href = "/dashboard";
           }}
-          className=" bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition"
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-xl transition"
         >
           <Home className="w-6 h-6" />
         </button>

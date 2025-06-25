@@ -121,13 +121,10 @@ export class Game {
   }
 
   mouseDownHandler = (e: MouseEvent) => {
-    this.clicked = true;
-    this.startX = e.clientX;
-    this.startY = e.clientY;
-
     if (this.selectedTool === "eraser") {
       const clickX = e.clientX;
       const clickY = e.clientY;
+
       const shapeIndex = this.existingShapes.findIndex((shape) => {
         if (shape.type === "rect") {
           return (
@@ -165,7 +162,13 @@ export class Game {
           })
         );
       }
+
+      return;
     }
+
+    this.clicked = true;
+    this.startX = e.clientX;
+    this.startY = e.clientY;
   };
 
   mouseUpHandler = (e: MouseEvent) => {

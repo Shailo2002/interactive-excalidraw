@@ -44,7 +44,7 @@ export default function Dashboard() {
 
   const joinRoom = async () => {
     try {
-      const res = await axios.get(`${HTTP_BACKEND}/room/${slug}`);
+      const res = await axios.get(`${HTTP_BACKEND}/room/${slug}` );
       console.log(res.data.room.id);
       const roomId = res.data.room.id;
       setSlug("");
