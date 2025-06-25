@@ -117,19 +117,18 @@ importers:
       dotenv:
         specifier: ^16.4.7
         version: 16.5.0
+      esbuild:
+        specifier: ^0.25.2
+        version: 0.25.5
+      esbuild-runner:
+        specifier: ^2.2.2
+        version: 2.2.2(esbuild@0.25.5)
       express:
         specifier: ^5.1.0
         version: 5.1.0
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
-    devDependencies:
-      esbuild:
-        specifier: ^0.25.5
-        version: 0.25.5
-      esbuild-runner:
-        specifier: ^2.2.2
-        version: 2.2.2(esbuild@0.25.5)
 
   apps/ws-backend:
     dependencies:

@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-"build": "pnpm exec esbuild src/index.ts --bundle --platform=node --external:aws-sdk --external:mock-aws-s3 --external:nock --outdir=dist --loader:.html=text",
+    "build": "pnpm exec esbuild src/index.ts --bundle --platform=node --external:aws-sdk --external:mock-aws-s3 --external:nock --outdir=dist --loader:.html=text",
     "start": "node ./dist/index.js",
     "dev": "esr ./src/index.ts && node ./dist/index.js"
   },
@@ -21,15 +21,13 @@
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "esbuild": "^0.25.2",
+    "esbuild-runner": "^2.2.2",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "esbuild": "^0.25.5",
-    "esbuild-runner": "^2.2.2"
-  }
+  "description": ""
 }
