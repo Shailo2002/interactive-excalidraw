@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --outdir=dist",
+"build": "esbuild src/index.ts --bundle --platform=node --external:aws-sdk --external:mock-aws-s3 --external:nock --outdir=dist --loader:.html=text",
     "start": "node ./dist/index.js",
     "dev": "esr ./src/index.ts && node ./dist/index.js"
   },
