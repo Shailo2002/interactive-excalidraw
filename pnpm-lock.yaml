@@ -125,7 +125,7 @@ importers:
         version: 9.0.2
     devDependencies:
       esbuild:
-        specifier: ^0.25.2
+        specifier: ^0.25.5
         version: 0.25.5
       esbuild-runner:
         specifier: ^2.2.2
