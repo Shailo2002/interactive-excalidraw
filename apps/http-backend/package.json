@@ -4,8 +4,9 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-     "build": "tsc && ncc build dist/src/index.js -o dist",
-  "start": "node dist/index.js",
+    "postbuild": "cp package.json dist/ && cp -r ../../node_modules/.prisma dist/node_modules/.prisma",
+"build": "esbuild src/index.ts --bundle --platform=node --outdir=dist --loader:.html=text",
+"start": "NODE_PATH=./dist node dist/index.js",
     "dev": "esr ./src/index.ts && node ./dist/index.js"
   },
   "dependencies": {
