@@ -7,6 +7,13 @@ settings:
 importers:
 
   .:
+    dependencies:
+      esbuild:
+        specifier: ^0.25.2
+        version: 0.25.5
+      esbuild-runner:
+        specifier: ^2.2.2
+        version: 2.2.2(esbuild@0.25.5)
     devDependencies:
       esr:
         specifier: ^0.10.0
