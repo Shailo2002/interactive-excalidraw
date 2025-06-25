@@ -111,12 +111,12 @@ function Topbar({
         />
         <IconButton
           activated={selectedTool === "text"}
-          icon={<span className="font-bold text-lg">T</span>}
+          icon={<span className="pl-1 font-bold text-lg ">T</span>}
           onClick={() => setSelectedTool("text")}
         />
         <input
           type="color"
-          className="w-10 h-10 p-0 border-none bg-transparent"
+          className="w-10 h-10 p-0 border-none bg-transparent rounded-2xl"
           onChange={(e) => {
             setSelectedColor(e.target.value);
           }}

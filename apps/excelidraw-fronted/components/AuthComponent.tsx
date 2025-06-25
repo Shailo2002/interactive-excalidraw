@@ -1,10 +1,11 @@
 "use client";
 
 import { HTTP_BACKEND } from "@/config";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export function Authentication({ auth_type }: { auth_type: string }) {
   const [email, setEmail] = useState("");
@@ -14,19 +15,43 @@ export function Authentication({ auth_type }: { auth_type: string }) {
 
   const handleSubmit = async () => {
     if (auth_type === "signup") {
-      const signup_res = await axios.post(`${HTTP_BACKEND}/signup`, {
-        name,
-        email,
-        password,
-      });
-      router.push("/signin");
+      try {
+        const signup_res = await axios.post(`${HTTP_BACKEND}/signup`, {
+          name,
+          email,
+          password,
+        });
+        toast.success(signup_res.data.message);
+        router.push("/signin");
+      } catch (e) {
+        const err = e as AxiosError;
+        if (err.response) {
+          const data = err.response.data as { message: string };
+          toast.error(data.message);
+          console.log(data.message);
+        } else {
+          toast.error("An unexpected error occurred");
+        }
+      }
     } else {
-      const signin_res = await axios.post(`${HTTP_BACKEND}/signin`, {
-        email,
-        password,
-      });
-      localStorage.setItem("token", signin_res.data.token);
-      router.push("/dashboard");
+      try {
+        const signin_res = await axios.post(`${HTTP_BACKEND}/signin`, {
+          email,
+          password,
+        });
+        localStorage.setItem("token", signin_res.data.token);
+        toast.success(signin_res.data.message);
+        router.push("/dashboard");
+      } catch (e) {
+        const err = e as AxiosError;
+        if (err.response) {
+          const data = err.response.data as { message: string };
+          toast.error(data.message);
+          console.log(data.message);
+        } else {
+          toast.error("An unexpected error occurred");
+        }
+      }
     }
   };
 
