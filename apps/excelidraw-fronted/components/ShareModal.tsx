@@ -1,3 +1,5 @@
+import { toast } from "react-toastify";
+
 export function ShareModal({
   roomId,
   onClose,
@@ -21,7 +23,10 @@ export function ShareModal({
 
         <div className="mb-6">
           <button
-            onClick={() => navigator.clipboard.writeText(link)}
+            onClick={() => {
+              toast.success("link copied");
+              navigator.clipboard.writeText(link);
+            }}
             className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium"
           >
             Copy link

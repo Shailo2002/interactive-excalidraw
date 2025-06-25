@@ -1,5 +1,4 @@
-// ✅ Final behavior: Eraser removes whole shape (rect, circle, line) on click and deletes from DB using shape.id
-// ✅ Pencil remains unaffected (can be skipped or implemented later).
+
 
 import { Tool } from "@/components/Canvas";
 import { getExistingShapes } from "./http";
@@ -44,6 +43,7 @@ export class Game {
   private startX = 0;
   private startY = 0;
   private selectedTool: Tool = "circle";
+  private pencilPoints: { x: number; y: number }[] = [];
 
   socket: WebSocket;
 
@@ -77,6 +77,7 @@ export class Game {
       const message = JSON.parse(event.data);
       if (message.type === "chat") {
         const parsedShape = JSON.parse(message.message);
+        console.log("pased shape :", parsedShape);
         this.existingShapes.push(parsedShape.shape);
         this.clearCanvas();
       } else if (message.type === "erase") {
@@ -116,7 +117,17 @@ export class Game {
         this.ctx.lineTo(shape.endX, shape.endY);
         this.ctx.stroke();
         this.ctx.closePath();
+      } else if (shape.type === "pencil") {
+        this.ctx.beginPath();
+        const [first, ...rest] = shape.points;
+        this.ctx.moveTo(first.x, first.y);
+        for (const point of rest) {
+          this.ctx.lineTo(point.x, point.y);
+        }
+        this.ctx.stroke();
+        this.ctx.closePath();
       }
+
     });
   }
 
@@ -145,9 +156,23 @@ export class Game {
             { x: shape.endX, y: shape.endY }
           );
           return dist < 5;
+        } else if (shape.type === "pencil") {
+          // Check if click is near any segment of the pencil path
+          const points = shape.points;
+          for (let i = 0; i < points.length - 1; i++) {
+            const dist = this.pointToLineDistance(
+              { x: clickX, y: clickY },
+              points[i],
+              points[i + 1]
+            );
+            if (dist < 5) return true;
+          }
+          return false;
         }
+
         return false;
       });
+
 
       if (shapeIndex !== -1) {
         const shape = this.existingShapes[shapeIndex];
@@ -207,7 +232,28 @@ export class Game {
         endX,
         endY,
       };
+    } else if (this.selectedTool === "pencil" && this.pencilPoints.length > 1) {
+      const shape: Shape = {
+        id: uuidv4(),
+        type: "pencil",
+        points: [...this.pencilPoints],
+      };
+
+      this.existingShapes.push(shape);
+      this.socket.send(
+        JSON.stringify({
+          type: "chat",
+          message: JSON.stringify({ shape }),
+          roomId: this.roomId,
+        })
+      );
+
+      this.clearCanvas();
+      this.clicked = false;
+      this.pencilPoints = [];
+      return;
     }
+
 
     if (!shape) return;
 
@@ -252,7 +298,25 @@ export class Game {
       this.ctx.lineTo(endX, endY);
       this.ctx.stroke();
       this.ctx.closePath();
+    } else if (this.selectedTool === "pencil" && this.clicked) {
+      const newPoint = { x: e.clientX, y: e.clientY };
+      this.pencilPoints.push(newPoint);
+
+      this.clearCanvas();
+
+      this.ctx.strokeStyle = "white";
+      this.ctx.lineWidth = 2;
+
+      this.ctx.beginPath();
+      const [first, ...rest] = this.pencilPoints;
+      this.ctx.moveTo(first.x, first.y);
+      for (const point of rest) {
+        this.ctx.lineTo(point.x, point.y);
+      }
+      this.ctx.stroke();
+      this.ctx.closePath();
     }
+
   };
 
   pointToLineDistance(
