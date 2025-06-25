@@ -4,8 +4,8 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
- "build": "esbuild src/index.ts --bundle --platform=node --external:aws-sdk --external:mock-aws-s3 --external:nock --outdir=dist --loader:.html=text",
-    "start": "node ./dist/index.js",
+"build": "esbuild src/index.ts --bundle --platform=node --external:aws-sdk --external:mock-aws-s3 --external:nock --outdir=dist --loader:.html=text && cp package.json dist/",
+"start": "NODE_PATH=./dist node dist/index.js",
     "dev": "esr ./src/index.ts && node ./dist/index.js"
   },
   "dependencies": {
