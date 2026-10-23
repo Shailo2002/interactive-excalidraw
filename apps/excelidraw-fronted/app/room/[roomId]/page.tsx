@@ -11,9 +11,9 @@ async function getRoomId(slug: string) {
 export default async function Room({
   params,
 }: {
-  params: {
+  params: Promise<{
     roomId: string;
-  };
+  }>;
 }) {
   const slug1 = (await params).roomId;
   const roomId = await getRoomId(slug1);

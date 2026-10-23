@@ -1,4 +1,5 @@
 import { WebSocketServer, WebSocket } from "ws";
+import type { Server } from "node:http";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { prismaClient } from "@repo/db/client";
@@ -11,7 +12,8 @@ interface User {
 
 const users: User[] = [];
 
-const wss = new WebSocketServer({ port: 8080 });
+export function attachWebSocketServer(server: Server) {
+const wss = new WebSocketServer({ server });
 
 function checkUser(token: string): string | null {
   try {
@@ -51,8 +53,14 @@ wss.on("connection", (ws, request) => {
     ws,
   });
 
+  ws.on("close", () => {
+    const index = users.findIndex(user => user.ws === ws);
+    if (index !== -1) users.splice(index, 1);
+  });
+
   ws.on("message", async (data) => {
-    const parsedData = JSON.parse(data as unknown as string);
+    let parsedData;
+    try { parsedData = JSON.parse(data.toString()); } catch { return; }
 
     if (parsedData.type === "join_room") {
       ws.send("new person joined room");
@@ -141,3 +149,6 @@ wss.on("connection", (ws, request) => {
 
   });
 });
+
+return wss;
+}

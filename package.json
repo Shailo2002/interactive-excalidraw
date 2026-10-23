@@ -20,5 +20,10 @@
   "dependencies": {
     "esbuild": "^0.25.2",
     "esbuild-runner": "^2.2.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "typescript": "5.8.3"
+    }
   }
 }

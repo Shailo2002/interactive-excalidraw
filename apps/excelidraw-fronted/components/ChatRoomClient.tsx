@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { useRouter } from "next/navigation";
+
 import { useSocket } from "@/hooks/useSocket";
 
 export function ChatRoomClient({
@@ -15,7 +15,7 @@ export function ChatRoomClient({
   const [chat, setChats] = useState(messages);
   const [currentMessage, setCurrentMessage] = useState("");
   const { socket, loading } = useSocket();
-  const router = useRouter();
+
 
   // useEffect(() => {
   //   if (loading || !socket) {
@@ -46,8 +46,8 @@ export function ChatRoomClient({
 
   return (
     <div>
-      {chat.map((m) => (
-        <div>{m.message}</div>
+      {chat.map((m, index) => (
+        <div key={index}>{m.message}</div>
       ))}
       <input
         type="text"

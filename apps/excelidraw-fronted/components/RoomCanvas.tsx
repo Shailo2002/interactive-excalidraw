@@ -1,6 +1,6 @@
 "use client";
 import { WS_URL } from "@/config";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Canvas from "./Canvas";
 import { useRouter } from "next/navigation";
 

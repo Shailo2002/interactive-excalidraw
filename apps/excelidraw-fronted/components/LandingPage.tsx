@@ -18,19 +18,17 @@ export default function LandingPage(){
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
-              children={"Signin"}
               size="large"
               onClick={() => {
                 router.push("/signin");
               }}
-            />
+            >Signin</Button>
             <Button
               size="large"
               onClick={() => {
                 router.push("/signup");
               }}
-              children={"Signup"}
-            />
+            >Signup</Button>
           </div>
         </section>
 
@@ -73,8 +71,8 @@ export default function LandingPage(){
             <Button
               size="large"
               className="bg-blue-500 hover:bg-blue-600"
-              children={"Get Started - It's Free"}
-            />
+              onClick={() => router.push("/signup")}
+            >Get Started - It&apos;s Free</Button>
           </div>
         </section>
       </main>

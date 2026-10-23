@@ -19,7 +19,7 @@ export const Button = ({
   children,
   onClick,
   className = "",
-  size,
+  size = "medium",
 }: ButtonProps) => {
   return (
     <button

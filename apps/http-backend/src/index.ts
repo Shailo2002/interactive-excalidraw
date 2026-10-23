@@ -1,4 +1,6 @@
 import express from "express";
+import http from "node:http";
+import { attachWebSocketServer } from "../../ws-backend/src/index";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import bcrypt from "bcrypt";
@@ -16,7 +18,9 @@ import { prismaClient } from "@repo/db/client";
 
 dotenv.config();
 const app = express();
-const port = 3001;
+const port = Number(process.env.PORT || 3001);
+const server = http.createServer(app);
+attachWebSocketServer(server);
 app.use(express.json());
 
 app.use(
@@ -167,6 +171,15 @@ app.get("/roomlist",middleware,  async (req,res) => {
  }
 })
 
-app.listen(port, () => {
+app.get("/health", async (_req, res) => {
+  try {
+    await prismaClient.$queryRaw`SELECT 1`;
+    res.json({ status: "ok" });
+  } catch {
+    res.status(503).json({ status: "database unavailable" });
+  }
+});
+
+server.listen(port, "0.0.0.0", () => {
   console.log(`"http server running on ${port}"`);
 });
