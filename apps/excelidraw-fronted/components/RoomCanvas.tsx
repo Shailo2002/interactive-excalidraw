@@ -24,7 +24,11 @@ export default function RoomCanvas({ roomId }: { roomId: string }) {
         })
       );
     };
-  }, []);
+    return () => {
+      ws.onopen = null;
+      ws.close();
+    };
+  }, [roomId]);
 
   if (!socket) {
     console.log("socket ", socket)

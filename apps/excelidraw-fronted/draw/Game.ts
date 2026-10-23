@@ -61,6 +61,8 @@ export class Game {
   private selectedColor: string = "white";
   private pencilPoints: { x: number; y: number }[] = [];
 
+  private destroyed = false;
+  private erasedShapeIds = new Set<string>();
   socket: WebSocket;
 
   constructor(canvas: HTMLCanvasElement, roomId: string, socket: WebSocket) {
@@ -74,6 +76,8 @@ export class Game {
   }
 
   destroy() {
+    this.destroyed = true;
+    this.socket.removeEventListener("message", this.handleMessage);
     this.canvas.removeEventListener("mousedown", this.mouseDownHandler);
     this.canvas.removeEventListener("mouseup", this.mouseUpHandler);
     this.canvas.removeEventListener("mousemove", this.mouseMoveHandler);
@@ -89,26 +93,35 @@ export class Game {
   }
 
   async init() {
-    this.existingShapes = await getExistingShapes(this.roomId);
+    const history: Shape[] = await getExistingShapes(this.roomId);
+    if (this.destroyed) return;
+    const shapes = new Map<string, Shape>(history.map(shape => [shape.id, shape]));
+    for (const shape of this.existingShapes) shapes.set(shape.id, shape);
+    this.existingShapes = [...shapes.values()].filter(shape => !this.erasedShapeIds.has(shape.id));
     this.clearCanvas();
   }
 
-  initHandlers() {
-    this.socket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      if (message.type === "chat") {
-        const parsedShape = JSON.parse(message.message);
-        console.log("pased shape :", parsedShape);
-        this.existingShapes.push(parsedShape.shape);
-        this.clearCanvas();
-      } else if (message.type === "erase") {
-        const shapeIdToDelete = message.shapeId;
-        this.existingShapes = this.existingShapes.filter(
-          (shape) => shape.id !== shapeIdToDelete
-        );
-        this.clearCanvas();
+  private handleMessage = (event: MessageEvent) => {
+    let message;
+    try { message = JSON.parse(event.data); } catch { return; }
+    if (message.roomId && message.roomId !== this.roomId) return;
+    if (message.type === "chat") {
+      let shape: Shape;
+      try { shape = JSON.parse(message.message).shape; } catch { return; }
+      if (!shape?.id || this.erasedShapeIds.has(shape.id)) return;
+      if (!this.existingShapes.some(existing => existing.id === shape.id)) {
+        this.existingShapes.push(shape);
       }
-    };
+      this.clearCanvas();
+    } else if (message.type === "erase") {
+      this.erasedShapeIds.add(message.shapeId);
+      this.existingShapes = this.existingShapes.filter(shape => shape.id !== message.shapeId);
+      this.clearCanvas();
+    }
+  };
+
+  initHandlers() {
+    this.socket.addEventListener("message", this.handleMessage);
   }
 
   clearCanvas() {
@@ -211,6 +224,7 @@ export class Game {
 
       if (shapeIndex !== -1) {
         const shape = this.existingShapes[shapeIndex];
+        this.erasedShapeIds.add(shape.id);
         this.existingShapes.splice(shapeIndex, 1);
         this.clearCanvas();
 

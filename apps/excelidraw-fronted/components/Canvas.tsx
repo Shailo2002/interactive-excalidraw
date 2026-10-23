@@ -29,13 +29,13 @@ export default function Canvas({
 
   useEffect(() => {
     game?.setTool(selectedTool);
-  }, [selectedTool]);
+  }, [selectedTool, game]);
 
   useEffect(() => {
                     console.log("selected color :", selectedColor);
 
     game?.setColor(selectedColor);
-  }, [selectedColor]);
+  }, [selectedColor, game]);
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -45,7 +45,7 @@ export default function Canvas({
         g.destroy();
       };
     }
-  }, [canvasRef]);
+  }, [roomId, socket]);
 
   return (
     <div style={{ height: "100vh", overflow: "hidden" }}>
